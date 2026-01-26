@@ -425,33 +425,39 @@ class _WeatherPageState extends State<WeatherPage> {
                     ),
                   ),
 
-                Text(
-                  _locationLabel,
-                  style: TextStyle(
-                    fontSize: 26,
-                    fontWeight: FontWeight.bold,
-                    color: textColor,
+                Center(
+                  child: Column(
+                    children: [
+                      Text(
+                        _locationLabel,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 26,
+                          fontWeight: FontWeight.bold,
+                          color: textColor,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        "${_weather!.current.temp.round()} °C",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(fontSize: 40, color: textColor),
+                      ),
+                      // ⭐ MAIN WEATHER ANIMATION ⭐
+                      SizedBox(
+                        height: 120,
+                        child: Lottie.asset(
+                          getAnimationForWeather(
+                              _weather!.current.weather[0].main),
+                        ),
+                      ),
+                      Text(
+                        _weather!.current.weather[0].main,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(fontSize: 24, color: subTextColor),
+                      ),
+                    ],
                   ),
-                ),
-
-
-                Text(
-                  "${_weather!.current.temp.round()} °C",
-                  style: TextStyle(fontSize: 40, color: textColor),
-                ),
-
-                // ⭐ MAIN WEATHER ANIMATION ⭐
-                SizedBox(
-                  height: 120,
-                  child: Lottie.asset(
-                    getAnimationForWeather(
-                        _weather!.current.weather[0].main),
-                  ),
-                ),
-
-                Text(
-                  _weather!.current.weather[0].main,
-                  style: TextStyle(fontSize: 24, color: subTextColor),
                 ),
 
                 const SizedBox(height: 20),
