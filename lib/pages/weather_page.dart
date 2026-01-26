@@ -266,11 +266,15 @@ class _WeatherPageState extends State<WeatherPage> {
     final forecastCount = _weather!.daily.length > 1
         ? min(5, _weather!.daily.length - 1)
         : 0;
-    final hourlyCount = min(12, _weather!.hourly.length);
+    final hourlyCount = min(8, _weather!.hourly.length);
 
     final background = widget.isDark
         ? const [Color(0xFF0D1B2A), Color(0xFF1B263B)]
         : const [Color(0xFFE6F4FF), Color(0xFFB3DAFF)];
+    final textColor = widget.isDark ? Colors.white : Colors.black87;
+    final subTextColor = widget.isDark ? Colors.white70 : Colors.black54;
+    final cardColor =
+        widget.isDark ? Colors.white10 : Colors.white.withOpacity(0.85);
 
     return Scaffold(
       extendBodyBehindAppBar: true,
@@ -302,11 +306,11 @@ class _WeatherPageState extends State<WeatherPage> {
         ),
         child: SafeArea(
           child: ListView(
-              padding: const EdgeInsets.only(top: 24, bottom: 24),
+              padding: const EdgeInsets.only(top: 16, bottom: 24),
               children: [
 
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: TextField(
                     controller: _searchController,
                     textInputAction: TextInputAction.search,
@@ -318,7 +322,12 @@ class _WeatherPageState extends State<WeatherPage> {
                         onPressed: () =>
                             _searchCities(_searchController.text),
                       ),
-                      border: const OutlineInputBorder(),
+                      filled: true,
+                      fillColor: cardColor,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
+                      ),
                     ),
                   ),
                 ),
@@ -333,24 +342,31 @@ class _WeatherPageState extends State<WeatherPage> {
                 if (_searchError != null)
                   Text(
                     _searchError!,
-                    style: const TextStyle(color: Colors.red),
+                    style: const TextStyle(color: Colors.redAccent),
+                    textAlign: TextAlign.center,
                   ),
 
                 if (_searchResults.isNotEmpty)
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
-                    child: Column(
-                      children: _searchResults.map((city) {
-                        return ListTile(
-                          title: Text(city.displayName),
-                          onTap: () => _selectCity(city),
-                          trailing: IconButton(
-                            icon:
-                                const Icon(Icons.bookmark_add_outlined),
-                            onPressed: () => _saveCity(city),
-                          ),
-                        );
-                      }).toList(),
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: Card(
+                      color: cardColor,
+                      child: Column(
+                        children: _searchResults.map((city) {
+                          return ListTile(
+                            title: Text(
+                              city.displayName,
+                              style: TextStyle(color: textColor),
+                            ),
+                            onTap: () => _selectCity(city),
+                            trailing: IconButton(
+                              icon:
+                                  const Icon(Icons.bookmark_add_outlined),
+                              onPressed: () => _saveCity(city),
+                            ),
+                          );
+                        }).toList(),
+                      ),
                     ),
                   ),
 
@@ -359,28 +375,35 @@ class _WeatherPageState extends State<WeatherPage> {
                     padding: const EdgeInsets.only(top: 8),
                     child: Column(
                       children: [
-                        const Text(
+                        Text(
                           "Saved Cities",
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
+                            color: textColor,
                           ),
                         ),
                         const SizedBox(height: 4),
                         Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 8),
-                          child: Column(
-                            children: _savedCities.map((city) {
-                              return ListTile(
-                                title: Text(city.displayName),
-                                onTap: () => _selectCity(city),
-                                trailing: IconButton(
-                                  icon:
-                                      const Icon(Icons.delete_outline),
-                                  onPressed: () => _removeCity(city),
-                                ),
-                              );
-                            }).toList(),
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          child: Card(
+                            color: cardColor,
+                            child: Column(
+                              children: _savedCities.map((city) {
+                                return ListTile(
+                                  title: Text(
+                                    city.displayName,
+                                    style: TextStyle(color: textColor),
+                                  ),
+                                  onTap: () => _selectCity(city),
+                                  trailing: IconButton(
+                                    icon:
+                                        const Icon(Icons.delete_outline),
+                                    onPressed: () => _removeCity(city),
+                                  ),
+                                );
+                              }).toList(),
+                            ),
                           ),
                         ),
                       ],
@@ -404,16 +427,17 @@ class _WeatherPageState extends State<WeatherPage> {
 
                 Text(
                   _locationLabel,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 26,
                     fontWeight: FontWeight.bold,
+                    color: textColor,
                   ),
                 ),
 
 
                 Text(
                   "${_weather!.current.temp.round()} °C",
-                  style: const TextStyle(fontSize: 40),
+                  style: TextStyle(fontSize: 40, color: textColor),
                 ),
 
                 // ⭐ MAIN WEATHER ANIMATION ⭐
@@ -427,30 +451,39 @@ class _WeatherPageState extends State<WeatherPage> {
 
                 Text(
                   _weather!.current.weather[0].main,
-                  style: const TextStyle(fontSize: 24),
+                  style: TextStyle(fontSize: 24, color: subTextColor),
                 ),
 
                 const SizedBox(height: 20),
 
                 if (hourlyCount > 0)
-                  const Padding(
-                    padding: EdgeInsets.only(bottom: 8),
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 4),
                     child: Text(
-                      "Hourly Forecast",
-                      style:
-                          TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      "Next 24 hours (3h steps)",
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: textColor,
+                      ),
                     ),
                   ),
 
                 if (hourlyCount > 0)
                   SizedBox(
-                    height: 120,
+                    height: 130,
                     child: ListView.builder(
                       scrollDirection: Axis.horizontal,
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
                       itemCount: hourlyCount,
                       itemBuilder: (context, index) {
                         final hour = _weather!.hourly[index];
-                        return _buildHourlyTile(hour);
+                        return _buildHourlyTile(
+                          hour,
+                          cardColor: cardColor,
+                          textColor: textColor,
+                          subTextColor: subTextColor,
+                        );
                       },
                     ),
                   ),
@@ -491,7 +524,12 @@ class _WeatherPageState extends State<WeatherPage> {
     );
   }
 
-  Widget _buildHourlyTile(HourlyWeather hour) {
+  Widget _buildHourlyTile(
+    HourlyWeather hour, {
+    required Color cardColor,
+    required Color textColor,
+    required Color subTextColor,
+  }) {
     final time = DateTime.fromMillisecondsSinceEpoch(hour.dt * 1000);
     final timeLabel = "${time.hour.toString().padLeft(2, '0')}:00";
 
@@ -500,27 +538,31 @@ class _WeatherPageState extends State<WeatherPage> {
       margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-        color: Colors.grey.shade100,
+        color: cardColor,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text(timeLabel, style: const TextStyle(fontSize: 14)),
+          Text(
+            timeLabel,
+            style: TextStyle(fontSize: 14, color: subTextColor),
+          ),
           const SizedBox(height: 6),
           _buildWeatherIcon(hour.weather[0].icon, size: 36),
           const SizedBox(height: 4),
           Text(
             "${hour.temp.round()}°C",
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
+              color: textColor,
             ),
           ),
           const SizedBox(height: 4),
           Text(
             hour.weather[0].main,
-            style: const TextStyle(fontSize: 12),
+            style: TextStyle(fontSize: 12, color: subTextColor),
             overflow: TextOverflow.ellipsis,
           ),
         ],
@@ -535,7 +577,7 @@ class _WeatherPageState extends State<WeatherPage> {
         ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][date.weekday % 7];
 
     return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: ListTile(
         title: Text(
           weekday,
