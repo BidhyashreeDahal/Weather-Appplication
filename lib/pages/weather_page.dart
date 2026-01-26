@@ -11,7 +11,14 @@ import 'daily_detail_page.dart';
 import '../models/city_location.dart';
 
 class WeatherPage extends StatefulWidget {
-  const WeatherPage({super.key});
+  final bool isDark;
+  final ValueChanged<bool> onToggleTheme;
+
+  const WeatherPage({
+    super.key,
+    required this.isDark,
+    required this.onToggleTheme,
+  });
 
   @override
   State<WeatherPage> createState() => _WeatherPageState();
@@ -208,6 +215,22 @@ class _WeatherPageState extends State<WeatherPage> {
     final hourlyCount = min(12, _weather!.hourly.length);
 
     return Scaffold(
+      appBar: AppBar(
+        title: const Text("Weather"),
+        actions: [
+          Row(
+            children: [
+              const Icon(Icons.light_mode),
+              Switch(
+                value: widget.isDark,
+                onChanged: widget.onToggleTheme,
+              ),
+              const Icon(Icons.dark_mode),
+              const SizedBox(width: 8),
+            ],
+          ),
+        ],
+      ),
       body: SafeArea(
         child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
