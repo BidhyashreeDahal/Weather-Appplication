@@ -80,10 +80,9 @@ Install dependencies:
 
 flutter pub get
 
+Run the app (API key required):
 
-Run the app:
-
-flutter run
+flutter run --dart-define=OPENWEATHER_API_KEY=YOUR_KEY
 
 
 Supports Android emulator and web (Chrome).
