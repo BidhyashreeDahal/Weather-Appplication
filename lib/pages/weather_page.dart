@@ -332,6 +332,7 @@ class _WeatherPageState extends State<WeatherPage>
                 ],
                 begin: begin,
                 end: end,
+                stops: const [0.0, 0.6, 1.0],
               ),
             ),
             child: child,

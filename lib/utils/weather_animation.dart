@@ -32,7 +32,7 @@ List<Color> getGradientForWeather(String condition, {required bool isDark}) {
   if (normalized.contains("rain")) {
     return isDark
         ? const [Color(0xFF0B2233), Color(0xFF174A6F)]
-        : const [Color(0xFF4A90D9), Color(0xFF9FD0F2)];
+        : const [Color(0xFF5B92C8), Color(0xFFB6D6F2)];
   }
   if (normalized.contains("snow")) {
     return isDark
@@ -42,7 +42,7 @@ List<Color> getGradientForWeather(String condition, {required bool isDark}) {
   if (normalized.contains("cloud")) {
     return isDark
         ? const [Color(0xFF1C2633), Color(0xFF3A495C)]
-        : const [Color(0xFFB9C9D8), Color(0xFFF0F4F8)];
+        : const [Color(0xFFA6C8E6), Color(0xFFE8F1FA)];
   }
   if (normalized.contains("fog") || normalized.contains("mist")) {
     return isDark
@@ -52,12 +52,12 @@ List<Color> getGradientForWeather(String condition, {required bool isDark}) {
   if (normalized.contains("clear") || normalized.contains("sun")) {
     return isDark
         ? const [Color(0xFF0B1D2A), Color(0xFF1F4C7A)]
-        : const [Color(0xFF6FCBFF), Color(0xFFFFD166)];
+        : const [Color(0xFF61B7FF), Color(0xFFFFE7A3)];
   }
 
   return isDark
       ? const [Color(0xFF0B1D2A), Color(0xFF1B2B3F)]
-      : const [Color(0xFFEAF5FF), Color(0xFFCDE7FF)];
+      : const [Color(0xFF7AC6FF), Color(0xFFE9F6FF)];
 }
 
 Color getAccentColor(String condition, {required bool isDark}) {

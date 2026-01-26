@@ -1,19 +1,21 @@
-🌤️ Weather Divining App (Flutter)
+🌤️ Weather Application (Flutter)
 
-A modern Flutter application that displays real-time weather data and a 5-day forecast using the OpenWeather One Call API.
-The app features animated weather visuals, a clean UI, and detailed daily forecasts.
+A modern Flutter application that displays current conditions, hourly outlook, and a 5‑day forecast using the OpenWeather API. The app includes city search, saved locations, dynamic visuals, and a polished, responsive UI.
 
-✨ Features
+## Live Demo
+https://weather-appplication-livid.vercel.app/
 
-📍 Location search with saved cities
+## Features
 
-🌡️ Current temperature and weather conditions
+Location search with saved cities
 
-🕒 Hourly forecast (next 12 hours)
+ Current temperature and weather conditions
 
-📆 Scrollable 5-day weather forecast
+Hourly forecast (next 24 hours, 3‑hour steps)
 
-🔍 Detailed daily view with:
+Scrollable 5-day weather forecast
+
+Detailed daily view with:
 
 High / Low temperature
 
@@ -23,21 +25,21 @@ Wind speed
 
 UV index
 
-🎞️ Dynamic Lottie animations based on weather conditions
+Dynamic Lottie animations based on weather conditions
 
-🖼️ Weather icons for hourly forecast
+Weather icons based on conditions
 
-🌓 Light/dark theme toggle
+Light/dark theme toggle
 
-📴 Offline cache of last successful response
+Offline cache of last successful response
 
-📱 Responsive layout with a static header and scrollable content
+Responsive layout with a static header and scrollable content
 
-🛠️ Tech Stack
+## Tech Stack
 
 Flutter (Dart)
 
-OpenWeather One Call API
+OpenWeather API
 
 http – API requests
 
@@ -49,26 +51,24 @@ ListView.builder – dynamic forecast lists
 
 Flutter navigation for multi-screen flow
 
-🌐 API Integration
+## API Integration
 
-OpenWeather One Call API
+OpenWeather API
 
-https://api.openweathermap.org/data/3.0/onecall
+https://api.openweathermap.org/
 
 
 Data used:
 
 Current weather
-
-Hourly forecast
-
+Hourly forecast (3‑hour steps)
 Daily forecast
 
 Metric units
 
 Latitude & longitude based queries
 
-📂 Project Structure
+## Project Structure
 lib/
  ├── pages/
  │    ├── weather_page.dart
@@ -87,7 +87,7 @@ assets/
  ├── snow.json
  └── storm.json
 
-▶️ Getting Started
+## Getting Started
 
 Clone the repository
 
@@ -102,11 +102,8 @@ flutter run --dart-define=OPENWEATHER_API_KEY=YOUR_KEY
 
 Supports Android emulator and web (Chrome).
 
-📸 Screenshots
 
-(Optional — add screenshots here to showcase the UI)
-
-🚀 Future Improvements
+## Future Improvements
 
 Current location button (GPS)
 
@@ -114,6 +111,6 @@ Hourly forecast chart
 
 Better empty states and animations
 
-👤 Author
+## Author
 
 Bidhyashree Dahal
