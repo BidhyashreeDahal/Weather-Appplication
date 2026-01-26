@@ -471,7 +471,7 @@ class _WeatherPageState extends State<WeatherPage> {
 
                 if (hourlyCount > 0)
                   SizedBox(
-                    height: 130,
+                    height: 140,
                     child: ListView.builder(
                       scrollDirection: Axis.horizontal,
                       padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -534,36 +534,40 @@ class _WeatherPageState extends State<WeatherPage> {
     final timeLabel = "${time.hour.toString().padLeft(2, '0')}:00";
 
     return Container(
-      width: 90,
+      width: 86,
       margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-      padding: const EdgeInsets.all(8),
+      padding: const EdgeInsets.all(6),
       decoration: BoxDecoration(
         color: cardColor,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
         children: [
           Text(
             timeLabel,
-            style: TextStyle(fontSize: 14, color: subTextColor),
+            style: TextStyle(fontSize: 12, color: subTextColor),
           ),
-          const SizedBox(height: 6),
-          _buildWeatherIcon(hour.weather[0].icon, size: 36),
           const SizedBox(height: 4),
+          _buildWeatherIcon(hour.weather[0].icon, size: 32),
+          const SizedBox(height: 2),
           Text(
             "${hour.temp.round()}°C",
             style: TextStyle(
-              fontSize: 16,
+              fontSize: 14,
               fontWeight: FontWeight.bold,
               color: textColor,
             ),
           ),
-          const SizedBox(height: 4),
-          Text(
-            hour.weather[0].main,
-            style: TextStyle(fontSize: 12, color: subTextColor),
-            overflow: TextOverflow.ellipsis,
+          const SizedBox(height: 2),
+          Flexible(
+            child: Text(
+              hour.weather[0].main,
+              style: TextStyle(fontSize: 11, color: subTextColor),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
           ),
         ],
       ),
