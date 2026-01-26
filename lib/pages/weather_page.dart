@@ -7,6 +7,7 @@ import '../models/weather_response.dart';
 import '../services/weather_service.dart';
 import '../utils/weather_animation.dart';
 import 'daily_detail_page.dart';
+import '../models/city_location.dart';
 
 class WeatherPage extends StatefulWidget {
   const WeatherPage({super.key});
@@ -23,6 +24,14 @@ class _WeatherPageState extends State<WeatherPage> {
   WeatherResponse? _weather;
   bool _isLoading = true;
   String? _errorMessage;
+  final TextEditingController _searchController = TextEditingController();
+  List<CityLocation> _searchResults = [];
+  bool _isSearching = false;
+  String? _searchError;
+
+  double _lat = 43.6532;
+  double _lon = -79.3832;
+  String _locationLabel = "Toronto";
 
   @override
   void initState() {
@@ -38,6 +47,12 @@ class _WeatherPageState extends State<WeatherPage> {
     _fetchWeather();
   }
 
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
   Future<void> _fetchWeather() async {
     setState(() {
       _isLoading = true;
@@ -45,10 +60,7 @@ class _WeatherPageState extends State<WeatherPage> {
     });
 
     try {
-      final data = await _weatherService.getWeather(
-        43.6532,   // Toronto latitude
-        -79.3832,  // Toronto longitude
-      );
+      final data = await _weatherService.getWeather(_lat, _lon);
 
       if (!mounted) return;
       setState(() {
@@ -63,6 +75,47 @@ class _WeatherPageState extends State<WeatherPage> {
       });
       debugPrint("Error fetching weather: $e");
     }
+  }
+
+  Future<void> _searchCities(String query) async {
+    if (query.trim().isEmpty) {
+      setState(() {
+        _searchResults = [];
+        _searchError = null;
+      });
+      return;
+    }
+
+    setState(() {
+      _isSearching = true;
+      _searchError = null;
+    });
+
+    try {
+      final results = await _weatherService.searchCities(query);
+      if (!mounted) return;
+      setState(() {
+        _searchResults = results;
+        _isSearching = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isSearching = false;
+        _searchError = "Failed to search cities.";
+      });
+    }
+  }
+
+  void _selectCity(CityLocation city) {
+    setState(() {
+      _lat = city.lat;
+      _lon = city.lon;
+      _locationLabel = city.displayName;
+      _searchResults = [];
+      _searchController.clear();
+    });
+    _fetchWeather();
   }
 
   @override
@@ -122,9 +175,55 @@ class _WeatherPageState extends State<WeatherPage> {
               children: [
                 const SizedBox(height: 24),
 
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: TextField(
+                    controller: _searchController,
+                    textInputAction: TextInputAction.search,
+                    onSubmitted: _searchCities,
+                    decoration: InputDecoration(
+                      hintText: "Search city...",
+                      suffixIcon: IconButton(
+                        icon: const Icon(Icons.search),
+                        onPressed: () =>
+                            _searchCities(_searchController.text),
+                      ),
+                      border: const OutlineInputBorder(),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+
+                if (_isSearching)
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 8),
+                    child: CircularProgressIndicator(),
+                  ),
+
+                if (_searchError != null)
+                  Text(
+                    _searchError!,
+                    style: const TextStyle(color: Colors.red),
+                  ),
+
+                if (_searchResults.isNotEmpty)
+                  SizedBox(
+                    height: 180,
+                    child: ListView.builder(
+                      itemCount: _searchResults.length,
+                      itemBuilder: (context, index) {
+                        final city = _searchResults[index];
+                        return ListTile(
+                          title: Text(city.displayName),
+                          onTap: () => _selectCity(city),
+                        );
+                      },
+                    ),
+                  ),
+
               
                 Text(
-                  _weather!.timezone,
+                  _locationLabel,
                   style: const TextStyle(
                     fontSize: 26,
                     fontWeight: FontWeight.bold,
