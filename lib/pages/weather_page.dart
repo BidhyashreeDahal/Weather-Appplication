@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/weather_response.dart';
 import '../services/weather_service.dart';
@@ -28,6 +29,7 @@ class _WeatherPageState extends State<WeatherPage> {
   List<CityLocation> _searchResults = [];
   bool _isSearching = false;
   String? _searchError;
+  List<CityLocation> _savedCities = [];
 
   double _lat = 43.6532;
   double _lon = -79.3832;
@@ -44,6 +46,7 @@ class _WeatherPageState extends State<WeatherPage> {
     }
 
     _weatherService = WeatherService(_apiKey);
+    _loadSavedCities();
     _fetchWeather();
   }
 
@@ -116,6 +119,41 @@ class _WeatherPageState extends State<WeatherPage> {
       _searchController.clear();
     });
     _fetchWeather();
+  }
+
+  Future<void> _loadSavedCities() async {
+    final prefs = await SharedPreferences.getInstance();
+    final data = prefs.getStringList("saved_cities") ?? [];
+    if (!mounted) return;
+    setState(() {
+      _savedCities =
+          data.map(CityLocationStorage.fromStorageString).toList();
+    });
+  }
+
+  Future<void> _saveCities() async {
+    final prefs = await SharedPreferences.getInstance();
+    final data = _savedCities.map((c) => c.toStorageString()).toList();
+    await prefs.setStringList("saved_cities", data);
+  }
+
+  void _saveCity(CityLocation city) {
+    final exists =
+        _savedCities.any((c) => c.lat == city.lat && c.lon == city.lon);
+    if (exists) return;
+
+    setState(() {
+      _savedCities.add(city);
+    });
+    _saveCities();
+  }
+
+  void _removeCity(CityLocation city) {
+    setState(() {
+      _savedCities.removeWhere(
+          (c) => c.lat == city.lat && c.lon == city.lon);
+    });
+    _saveCities();
   }
 
   @override
@@ -216,11 +254,49 @@ class _WeatherPageState extends State<WeatherPage> {
                         return ListTile(
                           title: Text(city.displayName),
                           onTap: () => _selectCity(city),
+                          trailing: IconButton(
+                            icon:
+                                const Icon(Icons.bookmark_add_outlined),
+                            onPressed: () => _saveCity(city),
+                          ),
                         );
                       },
                     ),
                   ),
 
+                if (_savedCities.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: Column(
+                      children: [
+                        const Text(
+                          "Saved Cities",
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        SizedBox(
+                          height: 160,
+                          child: ListView.builder(
+                            itemCount: _savedCities.length,
+                            itemBuilder: (context, index) {
+                              final city = _savedCities[index];
+                              return ListTile(
+                                title: Text(city.displayName),
+                                onTap: () => _selectCity(city),
+                                trailing: IconButton(
+                                  icon:
+                                      const Icon(Icons.delete_outline),
+                                  onPressed: () => _removeCity(city),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
               
                 Text(
                   _locationLabel,
