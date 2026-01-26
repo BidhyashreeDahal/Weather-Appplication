@@ -6,8 +6,11 @@ import '../models/city_location.dart';
 class WeatherService {
   static const BASE_URL = "https://api.openweathermap.org/data/3.0/onecall";
   final String apiKey;
+  String? _lastResponseBody;
 
   WeatherService(this.apiKey);
+
+  String? get lastResponseBody => _lastResponseBody;
 
   Future<WeatherResponse> getWeather(double lat, double lon) async {
     if (apiKey.trim().isEmpty) {
@@ -20,6 +23,7 @@ class WeatherService {
     final response = await http.get(Uri.parse(url));
 
     if (response.statusCode == 200) {
+      _lastResponseBody = response.body;
       return WeatherResponse.fromJson(jsonDecode(response.body));
     } else {
       throw Exception("Failed to fetch weather: ${response.body}");

@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
@@ -37,6 +38,7 @@ class _WeatherPageState extends State<WeatherPage> {
   bool _isSearching = false;
   String? _searchError;
   List<CityLocation> _savedCities = [];
+  String? _cacheNotice;
 
   double _lat = 43.6532;
   double _lon = -79.3832;
@@ -67,11 +69,14 @@ class _WeatherPageState extends State<WeatherPage> {
     setState(() {
       _isLoading = true;
       _errorMessage = null;
+      _cacheNotice = null;
     });
 
     try {
       final data = await _weatherService.getWeather(_lat, _lon);
 
+      if (!mounted) return;
+      await _saveWeatherCache();
       if (!mounted) return;
       setState(() {
         _weather = data;
@@ -79,10 +84,21 @@ class _WeatherPageState extends State<WeatherPage> {
       });
     } catch (e) {
       if (!mounted) return;
-      setState(() {
-        _isLoading = false;
-        _errorMessage = "Failed to fetch weather. Please try again.";
-      });
+      final cached = await _loadWeatherCache();
+      if (!mounted) return;
+      if (cached != null) {
+        setState(() {
+          _weather = cached;
+          _isLoading = false;
+          _errorMessage = null;
+          _cacheNotice = "Offline: showing last saved data.";
+        });
+      } else {
+        setState(() {
+          _isLoading = false;
+          _errorMessage = "Failed to fetch weather. Please try again.";
+        });
+      }
       debugPrint("Error fetching weather: $e");
     }
   }
@@ -142,6 +158,26 @@ class _WeatherPageState extends State<WeatherPage> {
     final prefs = await SharedPreferences.getInstance();
     final data = _savedCities.map((c) => c.toStorageString()).toList();
     await prefs.setStringList("saved_cities", data);
+  }
+
+  String _cacheKey() {
+    final lat = _lat.toStringAsFixed(4);
+    final lon = _lon.toStringAsFixed(4);
+    return "weather_cache_${lat}_$lon";
+  }
+
+  Future<void> _saveWeatherCache() async {
+    final raw = _weatherService.lastResponseBody;
+    if (raw == null) return;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_cacheKey(), raw);
+  }
+
+  Future<WeatherResponse?> _loadWeatherCache() async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString(_cacheKey());
+    if (raw == null || raw.isEmpty) return null;
+    return WeatherResponse.fromJson(jsonDecode(raw));
   }
 
   void _saveCity(CityLocation city) {
@@ -336,7 +372,22 @@ class _WeatherPageState extends State<WeatherPage> {
                       ],
                     ),
                   ),
-              
+
+                if (_cacheNotice != null)
+                  Container(
+                    margin: const EdgeInsets.only(top: 12),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.amber.shade100,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      _cacheNotice!,
+                      style: const TextStyle(fontSize: 12),
+                    ),
+                  ),
+
                 Text(
                   _locationLabel,
                   style: const TextStyle(
