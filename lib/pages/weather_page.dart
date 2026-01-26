@@ -1,8 +1,12 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
-import '../services/weather_service.dart';
-import '../models/weather_response.dart';
-import 'daily_detail_page.dart';
 import 'package:lottie/lottie.dart';
+
+import '../models/weather_response.dart';
+import '../services/weather_service.dart';
+import '../utils/weather_animation.dart';
+import 'daily_detail_page.dart';
 
 class WeatherPage extends StatefulWidget {
   const WeatherPage({super.key});
@@ -16,6 +20,8 @@ class _WeatherPageState extends State<WeatherPage> {
       WeatherService("6c287a0a60da34f0725f72b519b8d94e");
 
   WeatherResponse? _weather;
+  bool _isLoading = true;
+  String? _errorMessage;
 
   @override
   void initState() {
@@ -23,49 +29,89 @@ class _WeatherPageState extends State<WeatherPage> {
     _fetchWeather();
   }
 
-  _fetchWeather() async {
+  Future<void> _fetchWeather() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
     try {
       final data = await _weatherService.getWeather(
         43.6532,   // Toronto latitude
         -79.3832,  // Toronto longitude
       );
 
+      if (!mounted) return;
       setState(() {
         _weather = data;
+        _isLoading = false;
       });
     } catch (e) {
-      print("Error fetching weather: $e");
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        _errorMessage = "Failed to fetch weather. Please try again.";
+      });
+      debugPrint("Error fetching weather: $e");
     }
-  }
-
-
-  String _getAnimationForWeather(String condition) {
-    condition = condition.toLowerCase();
-
-    if (condition.contains("cloud")) return "assets/cloudy.json";
-    if (condition.contains("rain")) return "assets/rain.json";
-    if (condition.contains("snow")) return "assets/snow.json";
-    if (condition.contains("storm") || condition.contains("thunder")) {
-      return "assets/storm.json";
-    }
-
-    return "assets/sunny.json"; // default
   }
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
+    if (_errorMessage != null) {
+      return Scaffold(
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  _errorMessage!,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontSize: 18),
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: _fetchWeather,
+                  child: const Text("Retry"),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    if (_weather == null) {
+      return const Scaffold(
+        body: Center(
+          child: Text(
+            "No weather data available.",
+            style: TextStyle(fontSize: 18),
+          ),
+        ),
+      );
+    }
+
+    final forecastCount = _weather!.daily.length > 1
+        ? min(5, _weather!.daily.length - 1)
+        : 0;
+
     return Scaffold(
-      body: _weather == null
-          ? const Center(
-              child: Text(
-                "Loading...",
-                style: TextStyle(fontSize: 32),
-              ),
-            )
-          : Column(
+      body: SafeArea(
+        child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                const SizedBox(height: 60),
+                const SizedBox(height: 24),
 
               
                 Text(
@@ -86,7 +132,7 @@ class _WeatherPageState extends State<WeatherPage> {
                 SizedBox(
                   height: 120,
                   child: Lottie.asset(
-                    _getAnimationForWeather(
+                    getAnimationForWeather(
                         _weather!.current.weather[0].main),
                   ),
                 ),
@@ -100,16 +146,24 @@ class _WeatherPageState extends State<WeatherPage> {
 
                
                 Expanded(
-                  child: ListView.builder(
-                    itemCount: 5, // next 5 days
-                    itemBuilder: (context, index) {
-                      final day = _weather!.daily[index + 1];
-                      return _buildDailyTile(day);
-                    },
-                  ),
+                  child: forecastCount == 0
+                      ? const Center(
+                          child: Text(
+                            "No forecast available.",
+                            style: TextStyle(fontSize: 16),
+                          ),
+                        )
+                      : ListView.builder(
+                          itemCount: forecastCount,
+                          itemBuilder: (context, index) {
+                            final day = _weather!.daily[index + 1];
+                            return _buildDailyTile(day);
+                          },
+                        ),
                 ),
               ],
             ),
+      ),
     );
   }
 
