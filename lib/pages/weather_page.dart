@@ -461,8 +461,7 @@ class _WeatherPageState extends State<WeatherPage> {
             ),
           ),
         ),
-      ),
-    );
+      );
   }
 
   Widget _buildWeatherIcon(String iconCode, {double size = 40}) {

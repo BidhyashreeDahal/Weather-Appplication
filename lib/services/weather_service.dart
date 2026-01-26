@@ -29,19 +29,21 @@ class WeatherService {
       throw Exception("Failed to fetch weather: ${response.body}");
     }
   }
-}
-Future<List<CityLocation>> getCityLocations(String query) async {
-  if(apiKey.trim().isEmpty){
-    throw Exception ("Missing API key");
-  }
-  final url = "https://api.openweathermap.org/geo/1.0/direct?q=$query&limit=5&appid=$apiKey";
-  final response = await http.get(Uri.parse(url));
-  if(response.statusCode == 200){
-   final List data = jsonDecode(response.body);
-   return data.map((e) => CityLocation.fromJson(json)).toList();
-  } else {
-    throw Exception("Failed to fetch city locations: ${response.body}");
-  }
-}
 
+  Future<List<CityLocation>> searchCities(String query) async {
+    if (apiKey.trim().isEmpty) {
+      throw Exception("Missing API key");
+    }
 
+    final url =
+        "https://api.openweathermap.org/geo/1.0/direct?q=$query&limit=5&appid=$apiKey";
+    final response = await http.get(Uri.parse(url));
+
+    if (response.statusCode == 200) {
+      final List data = jsonDecode(response.body);
+      return data.map((e) => CityLocation.fromJson(e)).toList();
+    } else {
+      throw Exception("Failed to fetch city locations: ${response.body}");
+    }
+  }
+}
