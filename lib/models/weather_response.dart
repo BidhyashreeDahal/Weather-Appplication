@@ -4,6 +4,7 @@ class WeatherResponse {
   final String timezone;
   final int timezoneOffset;
   final CurrentWeather current;
+  final List<HourlyWeather> hourly;
   final List<DailyWeather> daily;
 
   WeatherResponse({
@@ -12,6 +13,7 @@ class WeatherResponse {
     required this.timezone,
     required this.timezoneOffset,
     required this.current,
+    required this.hourly,
     required this.daily,
   });
 
@@ -22,6 +24,9 @@ class WeatherResponse {
       timezone: json['timezone'],
       timezoneOffset: json['timezone_offset'],
       current: CurrentWeather.fromJson(json['current']),
+      hourly: ((json['hourly'] as List?) ?? [])
+          .map((hour) => HourlyWeather.fromJson(hour))
+          .toList(),
       daily: (json['daily'] as List)
           .map((daily) => DailyWeather.fromJson(daily))
           .toList(),
@@ -159,6 +164,28 @@ class DailyWeather {
       rain: json['rain']?.toDouble(),
       snow: json['snow']?.toDouble(),
       uvi: json['uvi'],
+    );
+  }
+}
+
+class HourlyWeather {
+  final int dt;
+  final double temp;
+  final List<Weather> weather;
+
+  HourlyWeather({
+    required this.dt,
+    required this.temp,
+    required this.weather,
+  });
+
+  factory HourlyWeather.fromJson(Map<String, dynamic> json) {
+    return HourlyWeather(
+      dt: json['dt'],
+      temp: (json['temp'] as num).toDouble(),
+      weather: (json['weather'] as List)
+          .map((weather) => Weather.fromJson(weather))
+          .toList(),
     );
   }
 }

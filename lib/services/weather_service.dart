@@ -15,7 +15,7 @@ class WeatherService {
     }
 
     final url =
-        "$BASE_URL?lat=$lat&lon=$lon&exclude=hourly,minutely&units=metric&appid=$apiKey";
+        "$BASE_URL?lat=$lat&lon=$lon&exclude=minutely&units=metric&appid=$apiKey";
 
     final response = await http.get(Uri.parse(url));
 

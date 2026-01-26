@@ -205,6 +205,7 @@ class _WeatherPageState extends State<WeatherPage> {
     final forecastCount = _weather!.daily.length > 1
         ? min(5, _weather!.daily.length - 1)
         : 0;
+    final hourlyCount = min(12, _weather!.hourly.length);
 
     return Scaffold(
       body: SafeArea(
@@ -328,7 +329,29 @@ class _WeatherPageState extends State<WeatherPage> {
 
                 const SizedBox(height: 20),
 
-               
+                if (hourlyCount > 0)
+                  const Padding(
+                    padding: EdgeInsets.only(bottom: 8),
+                    child: Text(
+                      "Hourly Forecast",
+                      style:
+                          TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+
+                if (hourlyCount > 0)
+                  SizedBox(
+                    height: 120,
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: hourlyCount,
+                      itemBuilder: (context, index) {
+                        final hour = _weather!.hourly[index];
+                        return _buildHourlyTile(hour);
+                      },
+                    ),
+                  ),
+
                 Expanded(
                   child: forecastCount == 0
                       ? const Center(
@@ -347,6 +370,41 @@ class _WeatherPageState extends State<WeatherPage> {
                 ),
               ],
             ),
+      ),
+    );
+  }
+
+  Widget _buildHourlyTile(HourlyWeather hour) {
+    final time = DateTime.fromMillisecondsSinceEpoch(hour.dt * 1000);
+    final timeLabel = "${time.hour.toString().padLeft(2, '0')}:00";
+
+    return Container(
+      width: 90,
+      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade100,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(timeLabel, style: const TextStyle(fontSize: 14)),
+          const SizedBox(height: 6),
+          Text(
+            "${hour.temp.round()}°C",
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            hour.weather[0].main,
+            style: const TextStyle(fontSize: 12),
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
       ),
     );
   }
