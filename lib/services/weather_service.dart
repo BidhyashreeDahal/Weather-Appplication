@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../models/weather_response.dart';
+import '../models/city_location.dart';
 
 class WeatherService {
   static const BASE_URL = "https://api.openweathermap.org/data/3.0/onecall";
@@ -25,3 +26,18 @@ class WeatherService {
     }
   }
 }
+Future<List<CityLocation>> getCityLocations(String query) async {
+  if(apiKey.trim().isEmpty){
+    throw Exception ("Missing API key");
+  }
+  final url = "https://api.openweathermap.org/geo/1.0/direct?q=$query&limit=5&appid=$apiKey";
+  final response = await http.get(Uri.parse(url));
+  if(response.statusCode == 200){
+   final List data = jsonDecode(response.body);
+   return data.map((e) => CityLocation.fromJson(json)).toList();
+  } else {
+    throw Exception("Failed to fetch city locations: ${response.body}");
+  }
+}
+
+
