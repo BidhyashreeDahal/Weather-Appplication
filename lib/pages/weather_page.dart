@@ -28,7 +28,7 @@ class WeatherPage extends StatefulWidget {
 class _WeatherPageState extends State<WeatherPage> {
   static const String _apiKey =
       String.fromEnvironment('OPENWEATHER_API_KEY');
-  late final WeatherService _weatherService;
+  WeatherService? _weatherService;
 
   WeatherResponse? _weather;
   bool _isLoading = true;
@@ -66,6 +66,15 @@ class _WeatherPageState extends State<WeatherPage> {
   }
 
   Future<void> _fetchWeather() async {
+    if (_apiKey.isEmpty || _weatherService == null) {
+      setState(() {
+        _isLoading = false;
+        _errorMessage =
+            "Missing API key. Run with --dart-define=OPENWEATHER_API_KEY=YOUR_KEY.";
+      });
+      return;
+    }
+
     setState(() {
       _isLoading = true;
       _errorMessage = null;
@@ -73,7 +82,7 @@ class _WeatherPageState extends State<WeatherPage> {
     });
 
     try {
-      final data = await _weatherService.getWeather(_lat, _lon);
+      final data = await _weatherService!.getWeather(_lat, _lon);
 
       if (!mounted) return;
       await _saveWeatherCache();
@@ -104,6 +113,14 @@ class _WeatherPageState extends State<WeatherPage> {
   }
 
   Future<void> _searchCities(String query) async {
+    if (_apiKey.isEmpty || _weatherService == null) {
+      setState(() {
+        _searchError =
+            "Missing API key. Run with --dart-define=OPENWEATHER_API_KEY=YOUR_KEY.";
+      });
+      return;
+    }
+
     if (query.trim().isEmpty) {
       setState(() {
         _searchResults = [];
@@ -118,7 +135,7 @@ class _WeatherPageState extends State<WeatherPage> {
     });
 
     try {
-      final results = await _weatherService.searchCities(query);
+      final results = await _weatherService!.searchCities(query);
       if (!mounted) return;
       setState(() {
         _searchResults = results;
