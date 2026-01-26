@@ -301,10 +301,9 @@ class _WeatherPageState extends State<WeatherPage> {
           ),
         ),
         child: SafeArea(
-          child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
+          child: ListView(
+              padding: const EdgeInsets.only(top: 24, bottom: 24),
               children: [
-                const SizedBox(height: 24),
 
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -338,12 +337,10 @@ class _WeatherPageState extends State<WeatherPage> {
                   ),
 
                 if (_searchResults.isNotEmpty)
-                  SizedBox(
-                    height: 180,
-                    child: ListView.builder(
-                      itemCount: _searchResults.length,
-                      itemBuilder: (context, index) {
-                        final city = _searchResults[index];
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    child: Column(
+                      children: _searchResults.map((city) {
                         return ListTile(
                           title: Text(city.displayName),
                           onTap: () => _selectCity(city),
@@ -353,7 +350,7 @@ class _WeatherPageState extends State<WeatherPage> {
                             onPressed: () => _saveCity(city),
                           ),
                         );
-                      },
+                      }).toList(),
                     ),
                   ),
 
@@ -369,12 +366,11 @@ class _WeatherPageState extends State<WeatherPage> {
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                        SizedBox(
-                          height: 160,
-                          child: ListView.builder(
-                            itemCount: _savedCities.length,
-                            itemBuilder: (context, index) {
-                              final city = _savedCities[index];
+                        const SizedBox(height: 4),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          child: Column(
+                            children: _savedCities.map((city) {
                               return ListTile(
                                 title: Text(city.displayName),
                                 onTap: () => _selectCity(city),
@@ -384,7 +380,7 @@ class _WeatherPageState extends State<WeatherPage> {
                                   onPressed: () => _removeCity(city),
                                 ),
                               );
-                            },
+                            }).toList(),
                           ),
                         ),
                       ],
@@ -459,28 +455,28 @@ class _WeatherPageState extends State<WeatherPage> {
                     ),
                   ),
 
-                Expanded(
-                  child: forecastCount == 0
-                      ? const Center(
-                          child: Text(
-                            "No forecast available.",
-                            style: TextStyle(fontSize: 16),
-                          ),
-                        )
-                      : ListView.builder(
-                          itemCount: forecastCount,
-                          itemBuilder: (context, index) {
-                            final day = _weather!.daily[index + 1];
-                            return _buildDailyTile(day);
-                          },
-                        ),
-                ),
+                if (forecastCount == 0)
+                  const Padding(
+                    padding: EdgeInsets.only(top: 8),
+                    child: Text(
+                      "No forecast available.",
+                      style: TextStyle(fontSize: 16),
+                      textAlign: TextAlign.center,
+                    ),
+                  )
+                else
+                  Column(
+                    children: List.generate(forecastCount, (index) {
+                      final day = _weather!.daily[index + 1];
+                      return _buildDailyTile(day);
+                    }),
+                  ),
               ],
             ),
           ),
         ),
-      ),
-    )
+      );
+        
   }
 
   Widget _buildWeatherIcon(String iconCode, {double size = 40}) {
