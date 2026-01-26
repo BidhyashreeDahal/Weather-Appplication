@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:lottie/lottie.dart';
 
 import '../models/weather_response.dart';
 import '../utils/weather_animation.dart';
@@ -17,12 +16,18 @@ class DailyDetailPage extends StatelessWidget {
     final weekday =
         ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][date.weekday % 7];
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final background = isDark
-        ? const [Color(0xFF0D1B2A), Color(0xFF1B263B)]
-        : const [Color(0xFFE6F4FF), Color(0xFFB3DAFF)];
+    final background = getGradientForWeather(
+      day.weather[0].main,
+      isDark: isDark,
+    );
+    final accentColor = getAccentColor(
+      day.weather[0].main,
+      isDark: isDark,
+    );
     final textColor = isDark ? Colors.white : Colors.black87;
     final subTextColor = isDark ? Colors.white70 : Colors.black54;
-    final cardColor = isDark ? Colors.white10 : Colors.white.withOpacity(0.85);
+    final cardColor =
+        isDark ? Colors.black.withOpacity(0.2) : Colors.white.withOpacity(0.95);
 
     return Scaffold(
       appBar: AppBar(
@@ -53,7 +58,7 @@ class DailyDetailPage extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 28,
                         fontWeight: FontWeight.bold,
-                        color: textColor,
+                        color: accentColor,
                       ),
                     ),
                     const SizedBox(height: 6),
@@ -63,63 +68,92 @@ class DailyDetailPage extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 44,
                         fontWeight: FontWeight.bold,
-                        color: textColor,
+                        color: accentColor,
                       ),
                     ),
-                    Text(
-                      day.weather[0].main,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 20, color: subTextColor),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: accentColor.withOpacity(0.18),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: accentColor.withOpacity(0.35),
+                        ),
+                      ),
+                      child: Text(
+                        day.weather[0].description,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: textColor,
+                        ),
+                      ),
                     ),
                     const SizedBox(height: 12),
-                    Lottie.asset(
-                      getAnimationForWeather(day.weather[0].main),
-                      width: 140,
-                      height: 140,
-                      fit: BoxFit.contain,
+                    Image.network(
+                      "https://openweathermap.org/img/wn/${day.weather[0].icon}@2x.png",
+                      width: 100,
+                      height: 100,
+                      errorBuilder: (context, error, stackTrace) {
+                        return const Icon(Icons.cloud, size: 48);
+                      },
                     ),
                   ],
                 ),
               ),
               const SizedBox(height: 16),
-              Card(
-                color: cardColor,
-                child: Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  child: Column(
-                    children: [
-                      _InfoRow(
-                        label: "High",
-                        value: "${day.temp.max.round()}°C",
-                        valueColor: textColor,
-                        labelColor: subTextColor,
+              Align(
+                alignment: Alignment.center,
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 520),
+                  child: Card(
+                    color: cardColor,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      side: BorderSide(color: accentColor.withOpacity(0.2)),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 12),
+                      child: Column(
+                        children: [
+                          _InfoRow(
+                            label: "High",
+                            value: "${day.temp.max.round()}°C",
+                            valueColor: textColor,
+                            labelColor: subTextColor,
+                          ),
+                          _InfoRow(
+                            label: "Low",
+                            value: "${day.temp.min.round()}°C",
+                            valueColor: textColor,
+                            labelColor: subTextColor,
+                          ),
+                          _InfoRow(
+                            label: "Humidity",
+                            value: "${day.humidity}%",
+                            valueColor: textColor,
+                            labelColor: subTextColor,
+                          ),
+                          _InfoRow(
+                            label: "Wind",
+                            value: "${day.windSpeed.toStringAsFixed(1)} m/s",
+                            valueColor: textColor,
+                            labelColor: subTextColor,
+                          ),
+                          _InfoRow(
+                            label: "UV Index",
+                            value: "${day.uvi}",
+                            valueColor: textColor,
+                            labelColor: subTextColor,
+                          ),
+                        ],
                       ),
-                      _InfoRow(
-                        label: "Low",
-                        value: "${day.temp.min.round()}°C",
-                        valueColor: textColor,
-                        labelColor: subTextColor,
-                      ),
-                      _InfoRow(
-                        label: "Humidity",
-                        value: "${day.humidity}%",
-                        valueColor: textColor,
-                        labelColor: subTextColor,
-                      ),
-                      _InfoRow(
-                        label: "Wind",
-                        value: "${day.windSpeed} m/s",
-                        valueColor: textColor,
-                        labelColor: subTextColor,
-                      ),
-                      _InfoRow(
-                        label: "UV Index",
-                        value: "${day.uvi}",
-                        valueColor: textColor,
-                        labelColor: subTextColor,
-                      ),
-                    ],
+                    ),
                   ),
                 ),
               ),

@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'package:lottie/lottie.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/weather_response.dart';
@@ -25,7 +24,8 @@ class WeatherPage extends StatefulWidget {
   State<WeatherPage> createState() => _WeatherPageState();
 }
 
-class _WeatherPageState extends State<WeatherPage> {
+class _WeatherPageState extends State<WeatherPage>
+    with SingleTickerProviderStateMixin {
   static const String _apiKey =
       String.fromEnvironment('OPENWEATHER_API_KEY');
   WeatherService? _weatherService;
@@ -39,6 +39,7 @@ class _WeatherPageState extends State<WeatherPage> {
   String? _searchError;
   List<CityLocation> _savedCities = [];
   String? _cacheNotice;
+  late final AnimationController _backgroundController;
 
   double _lat = 43.6532;
   double _lon = -79.3832;
@@ -47,6 +48,11 @@ class _WeatherPageState extends State<WeatherPage> {
   @override
   void initState() {
     super.initState();
+    _backgroundController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 14),
+    )..repeat(reverse: true);
+
     if (_apiKey.isEmpty) {
       _isLoading = false;
       _errorMessage =
@@ -62,6 +68,7 @@ class _WeatherPageState extends State<WeatherPage> {
   @override
   void dispose() {
     _searchController.dispose();
+    _backgroundController.dispose();
     super.dispose();
   }
 
@@ -268,13 +275,25 @@ class _WeatherPageState extends State<WeatherPage> {
         : 0;
     final hourlyCount = min(8, _weather!.hourly.length);
 
-    final background = widget.isDark
-        ? const [Color(0xFF0D1B2A), Color(0xFF1B263B)]
-        : const [Color(0xFFE6F4FF), Color(0xFFB3DAFF)];
+    final condition = _weather!.current.weather[0].main;
+    final description = _weather!.current.weather[0].description;
+    final background = getGradientForWeather(
+      condition,
+      isDark: widget.isDark,
+    );
+    final accentColor = getAccentColor(
+      condition,
+      isDark: widget.isDark,
+    );
     final textColor = widget.isDark ? Colors.white : Colors.black87;
     final subTextColor = widget.isDark ? Colors.white70 : Colors.black54;
     final cardColor =
-        widget.isDark ? Colors.white10 : Colors.white.withOpacity(0.85);
+        widget.isDark ? Colors.black.withOpacity(0.2) : Colors.white.withOpacity(0.98);
+    const maxWidth = 720.0;
+
+    Color accentText(Color fallback) {
+      return accentColor.computeLuminance() > 0.75 ? fallback : accentColor;
+    }
 
     return Scaffold(
       extendBodyBehindAppBar: true,
@@ -297,71 +316,83 @@ class _WeatherPageState extends State<WeatherPage> {
           ),
         ],
       ),
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: background,
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
-        ),
+      body: AnimatedBuilder(
+        animation: _backgroundController,
+        builder: (context, child) {
+          final t = _backgroundController.value;
+          final begin = Alignment(-1.0 + (2.0 * t), -1.0);
+          final end = Alignment(1.0, 1.0 - (2.0 * t));
+          return Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  background[0],
+                  background[1],
+                  accentColor.withOpacity(0.15),
+                ],
+                begin: begin,
+                end: end,
+              ),
+            ),
+            child: child,
+          );
+        },
         child: SafeArea(
           child: ListView(
-              padding: const EdgeInsets.only(top: 16, bottom: 24),
-              children: [
-
-                Align(
-                  alignment: Alignment.center,
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 520),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: TextField(
-                        controller: _searchController,
-                        textInputAction: TextInputAction.search,
-                        onSubmitted: _searchCities,
-                        decoration: InputDecoration(
-                          hintText: "Search city...",
-                          suffixIcon: IconButton(
-                            icon: const Icon(Icons.search),
-                            onPressed: () =>
-                                _searchCities(_searchController.text),
-                          ),
-                          filled: true,
-                          fillColor: cardColor,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide.none,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            children: [
+              Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: maxWidth),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Card(
+                        color: cardColor,
+                        elevation: 2,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          side: BorderSide(color: accentColor.withOpacity(0.2)),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          child: TextField(
+                            controller: _searchController,
+                            textInputAction: TextInputAction.search,
+                            onSubmitted: _searchCities,
+                            decoration: InputDecoration(
+                              hintText: "Search city...",
+                              prefixIcon: const Icon(Icons.search),
+                              suffixIcon: IconButton(
+                                icon: const Icon(Icons.arrow_forward),
+                                onPressed: () =>
+                                    _searchCities(_searchController.text),
+                              ),
+                              border: InputBorder.none,
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 12),
-
-                if (_isSearching)
-                  const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 8),
-                    child: CircularProgressIndicator(),
-                  ),
-
-                if (_searchError != null)
-                  Text(
-                    _searchError!,
-                    style: const TextStyle(color: Colors.redAccent),
-                    textAlign: TextAlign.center,
-                  ),
-
-                if (_searchResults.isNotEmpty)
-                  Align(
-                    alignment: Alignment.center,
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 520),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                        child: Card(
+                      const SizedBox(height: 12),
+                      if (_isSearching)
+                        const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 8),
+                          child: CircularProgressIndicator(),
+                        ),
+                      if (_searchError != null)
+                        Text(
+                          _searchError!,
+                          style: const TextStyle(color: Colors.redAccent),
+                          textAlign: TextAlign.center,
+                        ),
+                      if (_searchResults.isNotEmpty)
+                        Card(
                           color: cardColor,
+                          elevation: 2,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            side: BorderSide(color: accentColor.withOpacity(0.2)),
+                          ),
                           child: Column(
                             children: _searchResults.map((city) {
                               return ListTile(
@@ -369,6 +400,8 @@ class _WeatherPageState extends State<WeatherPage> {
                                   city.displayName,
                                   style: TextStyle(color: textColor),
                                 ),
+                                contentPadding:
+                                    const EdgeInsets.symmetric(horizontal: 16),
                                 onTap: () => _selectCity(city),
                                 trailing: IconButton(
                                   icon:
@@ -379,34 +412,26 @@ class _WeatherPageState extends State<WeatherPage> {
                             }).toList(),
                           ),
                         ),
-                      ),
-                    ),
-                  ),
-
-                if (_savedCities.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 8),
-                    child: Column(
-                      children: [
-                        Text(
-                          "Saved Cities",
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: textColor,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Align(
-                          alignment: Alignment.center,
-                          child: ConstrainedBox(
-                            constraints: const BoxConstraints(maxWidth: 520),
-                            child: Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 12),
-                              child: Card(
+                      if (_searchResults.isNotEmpty)
+                        const SizedBox(height: 12),
+                      if (_savedCities.isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 4),
+                          child: Column(
+                            children: [
+                              _SectionHeader(
+                                icon: Icons.bookmark,
+                                text: "Saved Cities",
+                                textColor: textColor,
+                              ),
+                              const SizedBox(height: 4),
+                              Card(
                                 color: cardColor,
+                                elevation: 2,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  side: BorderSide(color: accentColor.withOpacity(0.2)),
+                                ),
                                 child: Column(
                                   children: _savedCities.map((city) {
                                     return ListTile(
@@ -414,6 +439,9 @@ class _WeatherPageState extends State<WeatherPage> {
                                         city.displayName,
                                         style: TextStyle(color: textColor),
                                       ),
+                                      contentPadding:
+                                          const EdgeInsets.symmetric(
+                                              horizontal: 16),
                                       onTap: () => _selectCity(city),
                                       trailing: IconButton(
                                         icon: const Icon(
@@ -424,136 +452,199 @@ class _WeatherPageState extends State<WeatherPage> {
                                   }).toList(),
                                 ),
                               ),
+                            ],
+                          ),
+                        ),
+                      if (_cacheNotice != null)
+                        Container(
+                          margin: const EdgeInsets.only(top: 12),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: Colors.amber.shade100,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            _cacheNotice!,
+                            style: const TextStyle(fontSize: 12),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      const SizedBox(height: 8),
+                      const SizedBox(height: 8),
+                      Card(
+                        color: cardColor,
+                        elevation: 2,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          side: BorderSide(color: accentColor.withOpacity(0.25)),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 16,
+                          ),
+                          child: Column(
+                            children: [
+                              Text(
+                                _locationLabel,
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.bold,
+                                  color: accentText(textColor),
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              Text(
+                                "${_weather!.current.temp.round()} °C",
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: 44,
+                                  fontWeight: FontWeight.bold,
+                                  color: accentText(textColor),
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 6,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: accentColor.withOpacity(0.18),
+                                  borderRadius: BorderRadius.circular(20),
+                                  border: Border.all(
+                                    color: accentColor.withOpacity(0.35),
+                                  ),
+                                ),
+                                child: Text(
+                                  description,
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: accentText(textColor),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              _buildWeatherIcon(
+                                _weather!.current.weather[0].icon,
+                                size: 96,
+                              ),
+                              const SizedBox(height: 8),
+                              Wrap(
+                                spacing: 8,
+                                runSpacing: 8,
+                                alignment: WrapAlignment.center,
+                                children: [
+                                  _StatChip(
+                                    label: "Feels",
+                                    value:
+                                        "${_weather!.current.feelsLike.round()}°C",
+                                    textColor: textColor,
+                                    subTextColor: subTextColor,
+                                    cardColor: cardColor,
+                                    accentColor: accentColor,
+                                  ),
+                                  _StatChip(
+                                    label: "Humidity",
+                                    value: "${_weather!.current.humidity}%",
+                                    textColor: textColor,
+                                    subTextColor: subTextColor,
+                                    cardColor: cardColor,
+                                    accentColor: accentColor,
+                                  ),
+                                  _StatChip(
+                                    label: "Wind",
+                                    value:
+                                        "${_weather!.current.windSpeed} m/s",
+                                    textColor: textColor,
+                                    subTextColor: subTextColor,
+                                    cardColor: cardColor,
+                                    accentColor: accentColor,
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      if (hourlyCount > 0)
+                        _SectionHeader(
+                          icon: Icons.schedule,
+                          text: "Next 24 hours (3h steps)",
+                          textColor: textColor,
+                        ),
+                      if (hourlyCount > 0)
+                        Card(
+                          color: cardColor,
+                          elevation: 2,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            side: BorderSide(color: accentColor.withOpacity(0.2)),
+                          ),
+                          child: SizedBox(
+                            height: 165,
+                            child: ListView.builder(
+                              scrollDirection: Axis.horizontal,
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 8),
+                              itemCount: hourlyCount,
+                              itemBuilder: (context, index) {
+                                final hour = _weather!.hourly[index];
+                                return _buildHourlyTile(
+                                  hour,
+                                  cardColor: cardColor,
+                                  textColor: textColor,
+                                  subTextColor: subTextColor,
+                                  accentColor: accentColor,
+                                );
+                              },
                             ),
                           ),
                         ),
-                      ],
-                    ),
-                  ),
-
-                if (_cacheNotice != null)
-                  Align(
-                    alignment: Alignment.center,
-                    child: Container(
-                      margin: const EdgeInsets.only(top: 12),
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 8),
-                      decoration: BoxDecoration(
-                        color: Colors.amber.shade100,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        _cacheNotice!,
-                        style: const TextStyle(fontSize: 12),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                  ),
-
-                Center(
-                  child: Column(
-                    children: [
-                      Text(
-                        _locationLabel,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 26,
-                          fontWeight: FontWeight.bold,
-                          color: textColor,
+                      if (forecastCount > 0) const SizedBox(height: 8),
+                      if (forecastCount > 0)
+                        _SectionHeader(
+                          icon: Icons.calendar_today,
+                          text: "Next 5 days",
+                          textColor: textColor,
                         ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        "${_weather!.current.temp.round()} °C",
-                        textAlign: TextAlign.center,
-                        style: TextStyle(fontSize: 40, color: textColor),
-                      ),
-                      // ⭐ MAIN WEATHER ANIMATION ⭐
-                      SizedBox(
-                        height: 120,
-                        child: Lottie.asset(
-                          getAnimationForWeather(
-                              _weather!.current.weather[0].main),
+                      if (forecastCount == 0)
+                        const Padding(
+                          padding: EdgeInsets.only(top: 8),
+                          child: Text(
+                            "No forecast available.",
+                            style: TextStyle(fontSize: 16),
+                            textAlign: TextAlign.center,
+                          ),
+                        )
+                      else
+                        Column(
+                          children: List.generate(forecastCount, (index) {
+                            final day = _weather!.daily[index + 1];
+                            return _buildDailyTile(
+                              day,
+                              cardColor: cardColor,
+                              textColor: textColor,
+                              subTextColor: subTextColor,
+                              accentColor: accentColor,
+                            );
+                          }),
                         ),
-                      ),
-                      Text(
-                        _weather!.current.weather[0].main,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(fontSize: 24, color: subTextColor),
-                      ),
                     ],
                   ),
                 ),
-
-                const SizedBox(height: 20),
-
-                if (hourlyCount > 0)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 4),
-                    child: Text(
-                      "Next 24 hours (3h steps)",
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: textColor,
-                      ),
-                    ),
-                  ),
-
-                if (hourlyCount > 0)
-                  SizedBox(
-                    height: 140,
-                    child: ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      padding: const EdgeInsets.symmetric(horizontal: 8),
-                      itemCount: hourlyCount,
-                      itemBuilder: (context, index) {
-                        final hour = _weather!.hourly[index];
-                        return _buildHourlyTile(
-                          hour,
-                          cardColor: cardColor,
-                          textColor: textColor,
-                          subTextColor: subTextColor,
-                        );
-                      },
-                    ),
-                  ),
-
-                if (forecastCount == 0)
-                  const Padding(
-                    padding: EdgeInsets.only(top: 8),
-                    child: Text(
-                      "No forecast available.",
-                      style: TextStyle(fontSize: 16),
-                      textAlign: TextAlign.center,
-                    ),
-                  )
-                else
-                  Column(
-                    children: List.generate(forecastCount, (index) {
-                      final day = _weather!.daily[index + 1];
-                      return _buildDailyTile(day);
-                    }),
-                  ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
-      );
-        
-  }
-
-  Widget _buildWeatherIcon(String iconCode, {double size = 40}) {
-    final url = "https://openweathermap.org/img/wn/$iconCode@2x.png";
-    return Image.network(
-      url,
-      width: size,
-      height: size,
-      errorBuilder: (context, error, stackTrace) {
-        return const Icon(Icons.cloud, size: 24);
-      },
+      ),
     );
+
   }
 
   Widget _buildHourlyTile(
@@ -561,17 +652,21 @@ class _WeatherPageState extends State<WeatherPage> {
     required Color cardColor,
     required Color textColor,
     required Color subTextColor,
+    required Color accentColor,
   }) {
     final time = DateTime.fromMillisecondsSinceEpoch(hour.dt * 1000);
     final timeLabel = "${time.hour.toString().padLeft(2, '0')}:00";
 
     return Container(
-      width: 86,
+      width: 110,
       margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
       padding: const EdgeInsets.all(6),
       decoration: BoxDecoration(
         color: cardColor,
         borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: accentColor.withOpacity(0.35),
+        ),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -579,15 +674,15 @@ class _WeatherPageState extends State<WeatherPage> {
         children: [
           Text(
             timeLabel,
-            style: TextStyle(fontSize: 12, color: subTextColor),
+            style: TextStyle(fontSize: 12, color: textColor.withOpacity(0.8)),
           ),
-          const SizedBox(height: 4),
-          _buildWeatherIcon(hour.weather[0].icon, size: 32),
+          const SizedBox(height: 6),
+          _buildWeatherIcon(hour.weather[0].icon, size: 28),
           const SizedBox(height: 2),
           Text(
             "${hour.temp.round()}°C",
             style: TextStyle(
-              fontSize: 14,
+              fontSize: 16,
               fontWeight: FontWeight.bold,
               color: textColor,
             ),
@@ -595,8 +690,8 @@ class _WeatherPageState extends State<WeatherPage> {
           const SizedBox(height: 2),
           Flexible(
             child: Text(
-              hour.weather[0].main,
-              style: TextStyle(fontSize: 11, color: subTextColor),
+              hour.weather[0].description,
+              style: TextStyle(fontSize: 11, color: textColor),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
@@ -607,7 +702,13 @@ class _WeatherPageState extends State<WeatherPage> {
   }
 
 
-  Widget _buildDailyTile(DailyWeather day) {
+  Widget _buildDailyTile(
+    DailyWeather day, {
+    required Color cardColor,
+    required Color textColor,
+    required Color subTextColor,
+    required Color accentColor,
+  }) {
     final date = DateTime.fromMillisecondsSinceEpoch(day.dt * 1000);
     final weekday =
         ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][date.weekday % 7];
@@ -615,19 +716,30 @@ class _WeatherPageState extends State<WeatherPage> {
     return Align(
       alignment: Alignment.center,
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 520),
+        constraints: const BoxConstraints(maxWidth: 720),
         child: Card(
+          color: cardColor,
+          elevation: 2,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+            side: BorderSide(color: accentColor.withOpacity(0.2)),
+          ),
           margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           child: ListTile(
+            leading: _buildWeatherIcon(day.weather[0].icon, size: 32),
             title: Text(
               weekday,
-              style:
-                  const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: textColor,
+              ),
             ),
             subtitle: Text(
-              "${day.temp.day.round()}°C — ${day.weather[0].main}",
+              "${day.temp.day.round()}°C — ${day.weather[0].description}",
+              style: TextStyle(color: subTextColor),
             ),
-            trailing: const Icon(Icons.arrow_forward),
+            trailing: Icon(Icons.arrow_forward, color: subTextColor),
             onTap: () {
               Navigator.push(
                 context,
@@ -639,6 +751,94 @@ class _WeatherPageState extends State<WeatherPage> {
           ),
         ),
       ),
+    );
+  }
+}
+
+Widget _buildWeatherIcon(String iconCode, {double size = 40}) {
+  final url = "https://openweathermap.org/img/wn/$iconCode@2x.png";
+  return Image.network(
+    url,
+    width: size,
+    height: size,
+    errorBuilder: (context, error, stackTrace) {
+      return Icon(Icons.cloud, size: size);
+    },
+  );
+}
+
+
+class _StatChip extends StatelessWidget {
+  final String label;
+  final String value;
+  final Color textColor;
+  final Color subTextColor;
+  final Color cardColor;
+  final Color accentColor;
+
+  const _StatChip({
+    required this.label,
+    required this.value,
+    required this.textColor,
+    required this.subTextColor,
+    required this.cardColor,
+    required this.accentColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: accentColor.withOpacity(0.15),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(label, style: TextStyle(fontSize: 12, color: subTextColor)),
+          const SizedBox(height: 2),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+              color: textColor,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SectionHeader extends StatelessWidget {
+  final IconData icon;
+  final String text;
+  final Color textColor;
+
+  const _SectionHeader({
+    required this.icon,
+    required this.text,
+    required this.textColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Icon(icon, size: 18, color: textColor),
+        const SizedBox(width: 6),
+        Text(
+          text,
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: textColor,
+          ),
+        ),
+      ],
     );
   }
 }

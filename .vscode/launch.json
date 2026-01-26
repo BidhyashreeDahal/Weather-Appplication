@@ -5,10 +5,11 @@
       "name": "Flutter",
       "request": "launch",
       "type": "dart",
-      "args": ["--dart-define=OPENWEATHER_API_KEY=YOUR_KEY"]
+      "args": ["--dart-define=5888e8df63afbecf6f05825c8b32180d"]
     }
   ]
 }
+
 {
     // Use IntelliSense to learn about possible attributes.
     // Hover to view descriptions of existing attributes.
