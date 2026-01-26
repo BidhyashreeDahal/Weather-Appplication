@@ -184,7 +184,7 @@ class _WeatherPageState extends State<WeatherPage> {
   }
 
   Future<void> _saveWeatherCache() async {
-    final raw = _weatherService.lastResponseBody;
+    final raw = _weatherService!.lastResponseBody;
     if (raw == null) return;
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_cacheKey(), raw);
