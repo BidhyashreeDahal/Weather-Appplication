@@ -280,6 +280,7 @@ class _WeatherPageState extends State<WeatherPage> {
       extendBodyBehindAppBar: true,
       appBar: AppBar(
         title: const Text("Weather"),
+        centerTitle: true,
         backgroundColor: Colors.transparent,
         elevation: 0,
         actions: [
@@ -309,24 +310,30 @@ class _WeatherPageState extends State<WeatherPage> {
               padding: const EdgeInsets.only(top: 16, bottom: 24),
               children: [
 
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: TextField(
-                    controller: _searchController,
-                    textInputAction: TextInputAction.search,
-                    onSubmitted: _searchCities,
-                    decoration: InputDecoration(
-                      hintText: "Search city...",
-                      suffixIcon: IconButton(
-                        icon: const Icon(Icons.search),
-                        onPressed: () =>
-                            _searchCities(_searchController.text),
-                      ),
-                      filled: true,
-                      fillColor: cardColor,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide.none,
+                Align(
+                  alignment: Alignment.center,
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 520),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: TextField(
+                        controller: _searchController,
+                        textInputAction: TextInputAction.search,
+                        onSubmitted: _searchCities,
+                        decoration: InputDecoration(
+                          hintText: "Search city...",
+                          suffixIcon: IconButton(
+                            icon: const Icon(Icons.search),
+                            onPressed: () =>
+                                _searchCities(_searchController.text),
+                          ),
+                          filled: true,
+                          fillColor: cardColor,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide.none,
+                          ),
+                        ),
                       ),
                     ),
                   ),
@@ -347,25 +354,31 @@ class _WeatherPageState extends State<WeatherPage> {
                   ),
 
                 if (_searchResults.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    child: Card(
-                      color: cardColor,
-                      child: Column(
-                        children: _searchResults.map((city) {
-                          return ListTile(
-                            title: Text(
-                              city.displayName,
-                              style: TextStyle(color: textColor),
-                            ),
-                            onTap: () => _selectCity(city),
-                            trailing: IconButton(
-                              icon:
-                                  const Icon(Icons.bookmark_add_outlined),
-                              onPressed: () => _saveCity(city),
-                            ),
-                          );
-                        }).toList(),
+                  Align(
+                    alignment: Alignment.center,
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 520),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        child: Card(
+                          color: cardColor,
+                          child: Column(
+                            children: _searchResults.map((city) {
+                              return ListTile(
+                                title: Text(
+                                  city.displayName,
+                                  style: TextStyle(color: textColor),
+                                ),
+                                onTap: () => _selectCity(city),
+                                trailing: IconButton(
+                                  icon:
+                                      const Icon(Icons.bookmark_add_outlined),
+                                  onPressed: () => _saveCity(city),
+                                ),
+                              );
+                            }).toList(),
+                          ),
+                        ),
                       ),
                     ),
                   ),
@@ -377,6 +390,7 @@ class _WeatherPageState extends State<WeatherPage> {
                       children: [
                         Text(
                           "Saved Cities",
+                          textAlign: TextAlign.center,
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
@@ -384,25 +398,32 @@ class _WeatherPageState extends State<WeatherPage> {
                           ),
                         ),
                         const SizedBox(height: 4),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 12),
-                          child: Card(
-                            color: cardColor,
-                            child: Column(
-                              children: _savedCities.map((city) {
-                                return ListTile(
-                                  title: Text(
-                                    city.displayName,
-                                    style: TextStyle(color: textColor),
-                                  ),
-                                  onTap: () => _selectCity(city),
-                                  trailing: IconButton(
-                                    icon:
-                                        const Icon(Icons.delete_outline),
-                                    onPressed: () => _removeCity(city),
-                                  ),
-                                );
-                              }).toList(),
+                        Align(
+                          alignment: Alignment.center,
+                          child: ConstrainedBox(
+                            constraints: const BoxConstraints(maxWidth: 520),
+                            child: Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 12),
+                              child: Card(
+                                color: cardColor,
+                                child: Column(
+                                  children: _savedCities.map((city) {
+                                    return ListTile(
+                                      title: Text(
+                                        city.displayName,
+                                        style: TextStyle(color: textColor),
+                                      ),
+                                      onTap: () => _selectCity(city),
+                                      trailing: IconButton(
+                                        icon: const Icon(
+                                            Icons.delete_outline),
+                                        onPressed: () => _removeCity(city),
+                                      ),
+                                    );
+                                  }).toList(),
+                                ),
+                              ),
                             ),
                           ),
                         ),
@@ -411,17 +432,21 @@ class _WeatherPageState extends State<WeatherPage> {
                   ),
 
                 if (_cacheNotice != null)
-                  Container(
-                    margin: const EdgeInsets.only(top: 12),
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: Colors.amber.shade100,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      _cacheNotice!,
-                      style: const TextStyle(fontSize: 12),
+                  Align(
+                    alignment: Alignment.center,
+                    child: Container(
+                      margin: const EdgeInsets.only(top: 12),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: Colors.amber.shade100,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        _cacheNotice!,
+                        style: const TextStyle(fontSize: 12),
+                        textAlign: TextAlign.center,
+                      ),
                     ),
                   ),
 
@@ -467,6 +492,7 @@ class _WeatherPageState extends State<WeatherPage> {
                     padding: const EdgeInsets.only(bottom: 4),
                     child: Text(
                       "Next 24 hours (3h steps)",
+                      textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
@@ -586,25 +612,32 @@ class _WeatherPageState extends State<WeatherPage> {
     final weekday =
         ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][date.weekday % 7];
 
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: ListTile(
-        title: Text(
-          weekday,
-          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-        ),
-        subtitle: Text(
-          "${day.temp.day.round()}°C — ${day.weather[0].main}",
-        ),
-        trailing: const Icon(Icons.arrow_forward),
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => DailyDetailPage(day: day),
+    return Align(
+      alignment: Alignment.center,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 520),
+        child: Card(
+          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: ListTile(
+            title: Text(
+              weekday,
+              style:
+                  const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
-          );
-        },
+            subtitle: Text(
+              "${day.temp.day.round()}°C — ${day.weather[0].main}",
+            ),
+            trailing: const Icon(Icons.arrow_forward),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => DailyDetailPage(day: day),
+                ),
+              );
+            },
+          ),
+        ),
       ),
     );
   }
