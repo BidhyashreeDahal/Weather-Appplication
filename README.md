@@ -5,9 +5,11 @@ The app features animated weather visuals, a clean UI, and detailed daily foreca
 
 ✨ Features
 
-📍 Location-based weather using latitude & longitude
+📍 Location search with saved cities
 
 🌡️ Current temperature and weather conditions
+
+🕒 Hourly forecast (next 12 hours)
 
 📆 Scrollable 5-day weather forecast
 
@@ -23,6 +25,12 @@ UV index
 
 🎞️ Dynamic Lottie animations based on weather conditions
 
+🖼️ Weather icons for hourly forecast
+
+🌓 Light/dark theme toggle
+
+📴 Offline cache of last successful response
+
 📱 Responsive layout with a static header and scrollable content
 
 🛠️ Tech Stack
@@ -34,6 +42,8 @@ OpenWeather One Call API
 http – API requests
 
 lottie – animated weather visuals
+
+shared_preferences – local persistence
 
 ListView.builder – dynamic forecast lists
 
@@ -50,6 +60,8 @@ Data used:
 
 Current weather
 
+Hourly forecast
+
 Daily forecast
 
 Metric units
@@ -64,7 +76,10 @@ lib/
  ├── services/
  │    └── weather_service.dart
  ├── models/
- │    └── weather_response.dart
+ │    ├── weather_response.dart
+ │    └── city_location.dart
+ ├── utils/
+ │    └── weather_animation.dart
 assets/
  ├── sunny.json
  ├── cloudy.json
@@ -93,13 +108,11 @@ Supports Android emulator and web (Chrome).
 
 🚀 Future Improvements
 
-Hourly forecast view
+Current location button (GPS)
 
-Theme switching (light/dark)
+Hourly forecast chart
 
-Saved locations
-
-Improved error handling
+Better empty states and animations
 
 👤 Author
 
