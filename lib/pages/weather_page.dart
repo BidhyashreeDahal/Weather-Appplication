@@ -184,6 +184,7 @@ class _WeatherPageState extends State<WeatherPage> {
   }
 
   Future<void> _saveWeatherCache() async {
+    if (_weatherService == null) return;
     final raw = _weatherService!.lastResponseBody;
     if (raw == null) return;
     final prefs = await SharedPreferences.getInstance();
@@ -478,7 +479,8 @@ class _WeatherPageState extends State<WeatherPage> {
             ),
           ),
         ),
-      );
+      ),
+    )
   }
 
   Widget _buildWeatherIcon(String iconCode, {double size = 40}) {
