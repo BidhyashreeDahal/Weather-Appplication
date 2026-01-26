@@ -214,9 +214,16 @@ class _WeatherPageState extends State<WeatherPage> {
         : 0;
     final hourlyCount = min(12, _weather!.hourly.length);
 
+    final background = widget.isDark
+        ? const [Color(0xFF0D1B2A), Color(0xFF1B263B)]
+        : const [Color(0xFFE6F4FF), Color(0xFFB3DAFF)];
+
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
         title: const Text("Weather"),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
         actions: [
           Row(
             children: [
@@ -231,8 +238,16 @@ class _WeatherPageState extends State<WeatherPage> {
           ),
         ],
       ),
-      body: SafeArea(
-        child: Column(
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: background,
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
+        child: SafeArea(
+          child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 const SizedBox(height: 24),
@@ -393,7 +408,21 @@ class _WeatherPageState extends State<WeatherPage> {
                 ),
               ],
             ),
+          ),
+        ),
       ),
+    );
+  }
+
+  Widget _buildWeatherIcon(String iconCode, {double size = 40}) {
+    final url = "https://openweathermap.org/img/wn/$iconCode@2x.png";
+    return Image.network(
+      url,
+      width: size,
+      height: size,
+      errorBuilder: (context, error, stackTrace) {
+        return const Icon(Icons.cloud, size: 24);
+      },
     );
   }
 
@@ -414,6 +443,8 @@ class _WeatherPageState extends State<WeatherPage> {
         children: [
           Text(timeLabel, style: const TextStyle(fontSize: 14)),
           const SizedBox(height: 6),
+          _buildWeatherIcon(hour.weather[0].icon, size: 36),
+          const SizedBox(height: 4),
           Text(
             "${hour.temp.round()}°C",
             style: const TextStyle(
