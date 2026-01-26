@@ -9,6 +9,10 @@ class WeatherService {
   WeatherService(this.apiKey);
 
   Future<WeatherResponse> getWeather(double lat, double lon) async {
+    if (apiKey.trim().isEmpty) {
+      throw Exception("Missing API key");
+    }
+
     final url =
         "$BASE_URL?lat=$lat&lon=$lon&exclude=hourly,minutely&units=metric&appid=$apiKey";
 

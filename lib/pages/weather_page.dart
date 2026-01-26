@@ -16,8 +16,9 @@ class WeatherPage extends StatefulWidget {
 }
 
 class _WeatherPageState extends State<WeatherPage> {
-  final WeatherService _weatherService =
-      WeatherService("6c287a0a60da34f0725f72b519b8d94e");
+  static const String _apiKey =
+      String.fromEnvironment('OPENWEATHER_API_KEY');
+  late final WeatherService _weatherService;
 
   WeatherResponse? _weather;
   bool _isLoading = true;
@@ -26,6 +27,14 @@ class _WeatherPageState extends State<WeatherPage> {
   @override
   void initState() {
     super.initState();
+    if (_apiKey.isEmpty) {
+      _isLoading = false;
+      _errorMessage =
+          "Missing API key. Set OPENWEATHER_API_KEY and rebuild.";
+      return;
+    }
+
+    _weatherService = WeatherService(_apiKey);
     _fetchWeather();
   }
 
